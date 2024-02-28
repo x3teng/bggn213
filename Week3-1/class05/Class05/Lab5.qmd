@@ -1,0 +1,270 @@
+---
+title: "Class 5: Data visualization with ggplot2"
+author: "Xiaoxuan Teng (PID: A69028742)"
+date: 01/28/2024
+format: pdf
+editor: visual
+---
+
+```{r}
+# install.packages("ggplot2")
+library(ggplot2)
+```
+
+# Section 6. Creating Scatter Plots
+
+### Specifing a geom layer with geom_point()
+
+**Q.** In your own RStudio can you add a trend line layer to help show the relationship between the plot variables with the geom_smooth() function?
+
+```{r}
+ggplot(cars) +
+  aes(x=speed, y=dist) +
+  geom_point() +
+  geom_smooth()
+```
+
+**Q.** Argue with geom_smooth() to add a straight line from a linear model without the shaded standard error region?
+
+```{r}
+# set the method to "linear model", and don't show the confidence interval (se = FALSE)
+ggplot(cars) +
+  aes(x=speed, y=dist) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F) 
+```
+
+**Q.** Can you finish this plot by adding various label annotations with the labs() function and changing the plot look to a more conservative “black & white” theme by adding the theme_bw() function:
+
+```{r}
+# Add label annotations by labs().
+# theme_bw(): build-in theme, white background and thin grey grid lines
+ggplot(cars) +
+  aes(x=speed, y=dist) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F) +
+  labs(title="Speed and Stopping Distances of Cars",
+       x="Speed (MPH)", 
+       y="Stopping Distance (ft)",
+       subtitle = "subtitle",
+       caption="Dataset: 'cars'") +
+  theme_bw()
+```
+
+### Adding more plot aesthetics through aes()
+
+```{r}
+url <- "https://bioboot.github.io/bimm143_S20/class-material/up_down_expression.txt"
+# read.delim() function is used to read delimited text files
+genes <- read.delim(url)
+# head() function is used to display the first n rows present in the input data frame.
+head(genes)
+# colnames() function returns or sets the names of the columns in a data frame.
+colnames(genes)
+# nrow()/ncol() function returns the number of rows/columns in a data frame.
+nrow(genes)
+ncol(genes)
+table(genes$State)
+round(table(genes$State) / nrow(genes) * 100, 2)
+```
+
+**Q.** Complete the code below to produce the following plot
+
+```{r}
+ggplot(genes) + 
+    aes(x=Condition1, y=Condition2) +
+    geom_point()
+```
+
+```{r}
+p <- ggplot(genes) + 
+    aes(x=Condition1, y=Condition2, col=State) +
+    geom_point()
+# scale_colour_manual(): Create your own discrete scale
+p + scale_colour_manual( values=c("blue","gray","red") )
+```
+
+**Q.** Nice, now add some plot annotations to the p object with the labs() function so your plot looks like the following:
+
+```{r}
+# Add label annotations by labs().
+p2 <- p + scale_colour_manual(values=c("blue","gray","red")) +
+    labs(title="Gene Expresion Changes Upon Drug Treatment",
+         x="Control (no drug) ",
+         y="Drug Treatment")
+p2
+```
+
+```{r}
+#| message: false
+# plotly library makes interactive graphs
+library(plotly)
+# ggplotly(p2)
+```
+
+# Section 7. Going Further
+
+```{r}
+#| message: false
+
+# install.packages("gapminder")
+# install.packages("dplyr")
+library(gapminder)
+library(dplyr)
+
+gapminder_2007 <- gapminder %>% filter(year==2007)
+head(gapminder_2007, 2)
+```
+
+**Q.** Complete the code below to produce a first basic scater plot of this gapminder_2007 dataset:
+
+```{r}
+ggplot(gapminder_2007) +
+  aes(x=gdpPercap, y=lifeExp) +
+  geom_point(alpha=0.5)
+```
+
+### Adding more varables to aes()
+
+```{r}
+ggplot(gapminder_2007) +
+  aes(x=gdpPercap, y=lifeExp, color=continent, size=pop) +
+  geom_point(alpha=0.5)
+```
+
+### Adjusting point size
+
+```{r}
+ggplot(gapminder_2007) + 
+  geom_point(aes(x = gdpPercap, y = lifeExp,
+                 size = pop), alpha=0.5) + 
+  scale_size_area(max_size = 10)
+```
+
+**Q.** Can you adapt the code you have learned thus far to reproduce our gapminder scatter plot for the year 1957? What do you notice about this plot is it easy to compare with the one for 2007?
+
+```{r}
+gapminder_1957 <- gapminder %>% filter(year==1957)
+head(gapminder_1957, 2)
+```
+```{r}
+ggplot(gapminder_1957, aes(gdpPercap, lifeExp, color = continent, size = pop)) +
+  geom_point(alpha = 0.7) +
+  scale_size_area(max_size = 15)
+```
+
+**Q.** Do the same steps above but include 1957 and 2007 in your input dataset for ggplot(). You should now include the layer facet_wrap(~year) to produce the following plot:
+
+```{r}
+gapminder_1957_2007 <- gapminder %>% filter(year==1957 | year==2007)
+
+ggplot(gapminder_1957_2007) + 
+  geom_point(aes(x = gdpPercap, y = lifeExp, color=continent,
+                 size = pop), alpha=0.7) + 
+  scale_size_area(max_size = 10) +
+  facet_wrap(~year)
+```
+
+# 8. OPTIONAL: Bar Charts
+
+```{r}
+gapminder_top5 <- gapminder %>% 
+  filter(year==2007) %>% 
+  arrange(desc(pop)) %>% 
+  top_n(5, pop)
+
+gapminder_top5
+```
+```{r}
+ggplot(gapminder_top5) + 
+  geom_col(aes(x = country, y = pop))
+```
+
+**Q** Create a bar chart showing the life expectancy of the five biggest countries by population in 2007.
+
+```{r}
+ggplot(gapminder_top5) + 
+  geom_col(aes(x = country, y = lifeExp))
+```
+
+**Q.** Plot population size by country. Create a bar chart showing the population (in millions) of the five biggest countries by population in 2007.
+
+```{r}
+ggplot(gapminder_top5) +
+  aes(x=country, y=pop, fill=gdpPercap) +
+  geom_col()
+```
+```{r}
+ggplot(gapminder_top5) +
+  aes(x=reorder(country, -pop), y=pop, fill=gdpPercap) +
+  geom_col()
+```
+```{r}
+ggplot(gapminder_top5) +
+  aes(x=reorder(country, -pop), y=pop, fill=country) +
+  geom_col(col="gray30") +
+  guides(fill="none")
+```
+
+### Flipping bar charts
+```{r}
+head(USArrests)
+```
+```{r}
+USArrests$State <- rownames(USArrests)
+ggplot(USArrests) +
+  aes(x=reorder(State,Murder), y=Murder) +
+  geom_col() +
+  coord_flip()
+```
+```{r}
+ggplot(USArrests) +
+  aes(x=reorder(State,Murder), y=Murder) +
+  geom_point() +
+  geom_segment(aes(x=State, 
+                   xend=State, 
+                   y=0, 
+                   yend=Murder), color="blue") +
+  coord_flip()
+```
+
+# Section 9. Extensions: Animation
+```{r}
+#install.packages("gifski")
+#install.packages("gganimate")
+library(gapminder)
+library(gganimate)
+
+# Setup nice regular ggplot of the gapminder data
+#ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
+#  geom_point(alpha = 0.7, show.legend = FALSE) +
+# scale_colour_manual(values = country_colors) +
+#  scale_size(range = c(2, 12)) +
+#  scale_x_log10() +
+  # Facet by continent
+#  facet_wrap(~continent) +
+  # Here comes the gganimate specific bits
+#  labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy') +
+#  transition_time(year) +
+#  shadow_wake(wake_length = 0.1, alpha = FALSE)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
